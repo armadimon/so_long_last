@@ -13,33 +13,76 @@ void	reset_data(t_game *game)
 	game->enemy.enemy_xy = 0;
 }
 
-t_list	*read_map(t_game *game, t_list *map_buffer, int i, char *argv)
+char	*ft_strnstr(const char *big, const char *little, size_t len)
 {
-	int		fd;
-	char	*line;
-	t_list	*new;
+	unsigned int i;
+	unsigned int j;
 
-	fd = open(argv, O_RDONLY);
-	if (fd < 0)
+	i = 0;
+	if (!ft_strlen(little))
+		return ((char *)big);
+	if (ft_strlen(big) < len)
+		len = ft_strlen(big);
+	while (i < len)
+	{
+		j = 0;
+		while ((little[j] == big[i + j]) && i + j < len)
+		{
+			if (little[j + 1] == '\0')
+				return ((char *)big + i);
+			j++;
+		}
+		i++;
+	}
+	return (0);
+}
+
+int	get_map_list(t_game *game, t_list *map_buffer, int fd)
+{
+	t_list	*new;
+	char	*line;
+	int		valid;
+	int	i;
+
+	i = 0;
+	valid = get_next_line(fd, &line);
+	if (valid == -1)
 		return (0);
-	while (get_next_line(fd, &line))
+	while (valid)
 	{
 		new = ft_lstnew(ft_strdup(line));
 		ft_lstadd_back(&map_buffer, new);
 		free(line);
+		valid = get_next_line(fd, &line);
 		i++;
 	}
+	if (valid == -1)
+		return (0);
 	new = ft_lstnew(ft_strdup(line));
 	ft_lstadd_back(&map_buffer, new);
-	game->map_height = i;
 	free(line);
+	game->map_height = i;
+	return (1);
+}
+
+t_list	*read_map(t_game *game, t_list *map_buffer, char *argv)
+{
+	int	fd;
+
+	if (ft_strnstr(argv, ".ber", 4) == 0)
+		return (0);
+	fd = open(argv, O_RDONLY);
+	if (fd < 0)
+		return (0);
+	if (get_map_list(game, map_buffer, argv) < 0)
+		return (0);
 	close(fd);
 	return (map_buffer);
 }
 
 int	game_init(t_game *game, t_list *map_buffer, char *argv)
 {
-	map_buffer = read_map(game, map_buffer, 0, argv);
+	map_buffer = read_map(game, map_buffer, argv);
 	if (!map_buffer)
 		return (0);
 	if (!parse_map(game, map_buffer))
@@ -51,26 +94,3 @@ int	game_init(t_game *game, t_list *map_buffer, char *argv)
 	return (1);
 }
 
-int	main(int argc, char **argv)
-{
-	t_game	game;
-	t_list	*map_buffer;
-
-	if (argc > 2)
-		return (0);
-	map_buffer = 0;
-	reset_data(&game);
-	if (!game_init(&game, map_buffer, argv[1]))
-	{
-		write(2, "Error\n : MAP_ERROR\n", 20);
-		return (0);
-	}
-	window_init(&game);
-	draw_field(&game);
-	draw_str(&game);
-	mlx_loop_hook(game.mlx, &main_loop, &game);
-	mlx_key_hook(game.win, user_move, &game);
-	mlx_hook(game.win, 17, 0, &key_press_exit, &game);
-	mlx_loop(game.mlx);
-	return (0);
-}

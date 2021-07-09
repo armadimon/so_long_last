@@ -10,7 +10,8 @@
 #                                                                              #
 # **************************************************************************** #
 
-SRCS			=	so_long.c \
+SRCS			=	main.c \
+					so_long.c \
 					gnl/get_next_line_utils.c \
 					gnl/get_next_line.c \
 					utils/lst.c \
@@ -39,7 +40,7 @@ NAME			= so_long
 all:			$(NAME)
 
 $(NAME):		$(MLX) $(OBJS)
-				gcc ${CFLAGS} -o ${NAME} ${OBJS} ${LIBS}
+				gcc ${CFLAGS} -o ${NAME} $< ${LIBS}
 
 $(MLX):
 				@$(MAKE) -C mlx

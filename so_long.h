@@ -5,4 +5,6 @@
 # include "srcs/game.h"
 # include "gnl/get_next_line.h"
 
+int	game_init(t_game *game, t_list *map_buffer, char *argv);
+
 #endif
